@@ -1,4 +1,4 @@
-# 托盘
+# 托盘（Tuopan）
 
 这是服务于 [Obsidian](https://obsidian.md) 的托盘插件，让它安静地常驻系统托盘：开机隐藏、关窗不退出、再次启动不弹选库窗。
 
@@ -28,13 +28,13 @@
 
 1. 在第三方插件里安装 BRAT。
 2. 运行命令 `BRAT: Add a beta plugin for testing`，填入 `incredible404-rgb/tuopan`。
-3. 在第三方插件里启用 **托盘**。
+3. 在第三方插件里启用 **Tuopan**。
 
 ### 手动安装
 
 1. 从 [最新发布](https://github.com/incredible404-rgb/tuopan/releases/latest) 下载 `main.js` 和 `manifest.json`。
 2. 在仓库的 `.obsidian/plugins/` 下新建 `tuopan` 文件夹，把两个文件放进去。
-3. 在 **设置 → 第三方插件** 里刷新列表，启用 **托盘**。
+3. 在 **设置 → 第三方插件** 里刷新列表，启用 **Tuopan**。
 
 ## 仓库以外的访问
 
