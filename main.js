@@ -2,10 +2,10 @@
 
 const { Plugin, PluginSettingTab, Setting, Notice, Platform, moment, normalizePath } = require("obsidian");
 
-const STARTUP_NAME = "Obsidian Yoga Tray";
-const STARTUP_FLAG = "--yoga-tray-startup";
+const STARTUP_NAME = "Obsidian 托盘";
+const STARTUP_FLAG = "--tuopan-startup";
 // Plugins this one replaces leave Run values behind; each would launch Obsidian a second time.
-const LEGACY_STARTUP_NAMES = ["electron.app.Obsidian", "Obsidian Windows Startup"];
+const LEGACY_STARTUP_NAMES = ["electron.app.Obsidian", "Obsidian Windows Startup", "Obsidian Yoga Tray", "Obsidian Traystone-Yoga"];
 const PICKER_SWEEP_MS = [0, 100, 300, 1000, 3000];
 
 const DEFAULTS = {
@@ -33,16 +33,16 @@ function getRemote() {
   return null;
 }
 
-module.exports = class YogaTrayPlugin extends Plugin {
+module.exports = class TuopanPlugin extends Plugin {
   async onload() {
     this.settings = Object.assign({}, DEFAULTS, await this.loadData());
-    this.addSettingTab(new YogaTraySettings(this.app, this));
+    this.addSettingTab(new TuopanSettings(this.app, this));
     // The vault syncs to other devices; tray and Run entries only make sense on Windows.
     if (!Platform.isDesktopApp || process.platform !== "win32") return;
 
     this.remote = getRemote();
     if (!this.remote) {
-      new Notice("Yoga 托盘：无法访问 Electron，托盘不可用。");
+      new Notice("托盘：无法访问 Electron，托盘不可用。");
       return;
     }
     this.win = this.remote.getCurrentWindow();
@@ -58,9 +58,12 @@ module.exports = class YogaTrayPlugin extends Plugin {
     this.applyTaskbar();
     // Applied once: rewriting on every launch would undo a Task Manager disable.
     if (!this.settings.startupApplied) {
-      this.applyStartup();
-      this.settings.startupApplied = true;
-      await this.save();
+      // Not awaited: verification takes seconds and must not delay hiding at login.
+      this.applyStartup().then(async (ok) => {
+        if (!ok) return;
+        this.settings.startupApplied = true;
+        await this.save();
+      });
     }
 
     this.addCommand({ id: "toggle-window", name: "显示或隐藏窗口", callback: () => this.toggle() });
@@ -100,20 +103,28 @@ module.exports = class YogaTrayPlugin extends Plugin {
     if (this.settings.startHidden) this.hide();
   }
 
-  applyStartup() {
+  // Electron writes login items in the background and reports no failure, so read the result back.
+  async applyStartup() {
     const { app, process: mainProcess } = this.remote;
     const path = mainProcess.execPath;
+    const args = [STARTUP_FLAG];
+    const openAtLogin = this.settings.launchOnStartup;
+    const isCorrect = () => {
+      const names = app.getLoginItemSettings({ path, args }).launchItems.map((item) => item.name);
+      return names.includes(STARTUP_NAME) === openAtLogin && !names.some((n) => LEGACY_STARTUP_NAMES.includes(n));
+    };
     try {
-      for (const name of LEGACY_STARTUP_NAMES) app.setLoginItemSettings({ openAtLogin: false, name, path });
-      app.setLoginItemSettings({
-        openAtLogin: this.settings.launchOnStartup,
-        name: STARTUP_NAME,
-        path,
-        args: [STARTUP_FLAG],
-      });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        for (const name of LEGACY_STARTUP_NAMES) app.setLoginItemSettings({ openAtLogin: false, name, path });
+        app.setLoginItemSettings({ openAtLogin, name: STARTUP_NAME, path, args });
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+        if (isCorrect()) return true;
+      }
+      new Notice("托盘：自启设置没有生效，请在设置里重新打开开关，或检查任务管理器的启动项。", 10000);
     } catch (e) {
-      new Notice(`Yoga 托盘：自启设置失败：${e.message ?? e}`);
+      new Notice(`托盘：自启设置失败：${e.message ?? e}`, 10000);
     }
+    return false;
   }
 
   // Without a tray icon a hidden window has no way back, so closing must then really close.
@@ -262,7 +273,7 @@ module.exports = class YogaTrayPlugin extends Plugin {
       this.refreshTray();
     } catch (e) {
       this.tray = null;
-      new Notice(`Yoga 托盘：托盘图标创建失败：${e.message ?? e}`);
+      new Notice(`托盘：托盘图标创建失败：${e.message ?? e}`);
     }
   }
 
@@ -273,7 +284,7 @@ module.exports = class YogaTrayPlugin extends Plugin {
     if (this.settings.trayIconPath) {
       const custom = nativeImage.createFromPath(this.settings.trayIconPath);
       if (!custom.isEmpty()) return custom;
-      new Notice("Yoga 托盘：自定义图标读取失败，已改用自带图标。");
+      new Notice("托盘：自定义图标读取失败，已改用自带图标。");
     }
     const bundled = nativeImage.createFromPath(this.app.vault.adapter.getFullPath(`${this.manifest.dir}/tray.ico`));
     if (!bundled.isEmpty()) return bundled;
@@ -320,9 +331,9 @@ module.exports = class YogaTrayPlugin extends Plugin {
     const bind = (key, fn) => {
       if (!key) return;
       try {
-        if (!this.remote.globalShortcut.register(key, fn)) new Notice(`Yoga 托盘：快捷键 ${key} 已被占用。`);
+        if (!this.remote.globalShortcut.register(key, fn)) new Notice(`托盘：快捷键 ${key} 已被占用。`);
       } catch {
-        new Notice(`Yoga 托盘：快捷键 ${key} 格式无效。`);
+        new Notice(`托盘：快捷键 ${key} 格式无效。`);
       }
     };
     this.hotkeys = [this.settings.toggleHotkey, this.settings.quickNoteHotkey].filter(Boolean);
@@ -360,12 +371,12 @@ module.exports = class YogaTrayPlugin extends Plugin {
       workspace.setActiveLeaf(leaf, { focus: true });
       this.show();
     } catch (e) {
-      new Notice(`Yoga 托盘：快速笔记失败：${e.message ?? e}`);
+      new Notice(`托盘：快速笔记失败：${e.message ?? e}`);
     }
   }
 };
 
-class YogaTraySettings extends PluginSettingTab {
+class TuopanSettings extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;

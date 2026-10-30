@@ -6,13 +6,13 @@ $ErrorActionPreference = 'Stop'
 if (-not (Test-Path -LiteralPath $Exe)) { throw "Obsidian.exe not found: $Exe" }
 
 Add-Type -AssemblyName System.Drawing
-Add-Type -Namespace YogaTray -Name Native -MemberDefinition '[DllImport("user32",CharSet=CharSet.Unicode)] public static extern uint PrivateExtractIconsW(string f,int i,int cx,int cy,IntPtr[] ic,uint[] id,uint n,uint fl);'
+Add-Type -Namespace Tuopan -Name Native -MemberDefinition '[DllImport("user32",CharSet=CharSet.Unicode)] public static extern uint PrivateExtractIconsW(string f,int i,int cx,int cy,IntPtr[] ic,uint[] id,uint n,uint fl);'
 
 # 100% to 400% tray sizes, plus 256 for anything larger.
 $frames = foreach ($size in 16, 20, 24, 32, 40, 48, 64, 256) {
     $handle = New-Object IntPtr[] 1
     $id = New-Object uint32[] 1
-    if ([YogaTray.Native]::PrivateExtractIconsW($Exe, 0, $size, $size, $handle, $id, 1, 0) -lt 1) { throw "Cannot extract ${size}px icon" }
+    if ([Tuopan.Native]::PrivateExtractIconsW($Exe, 0, $size, $size, $handle, $id, 1, 0) -lt 1) { throw "Cannot extract ${size}px icon" }
     $stream = New-Object IO.MemoryStream
     [System.Drawing.Icon]::FromHandle($handle[0]).ToBitmap().Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
     [pscustomobject]@{ Size = $size; Png = $stream.ToArray() }

@@ -1,6 +1,8 @@
-# Yoga 托盘
+# 托盘
 
-让 Obsidian 在 Windows 上安静地常驻托盘：开机隐藏、关窗不退出、再次启动不弹选库窗。
+这是服务于 [Obsidian](https://obsidian.md) 的托盘插件，让它安静地常驻系统托盘：开机隐藏、关窗不退出、再次启动不弹选库窗。
+
+**目前只在 Windows 上验证过**，在其他系统上插件不会启用。
 
 ## 功能
 
@@ -22,11 +24,9 @@
 
 ## 安装
 
-只支持 Windows 桌面版。
-
-1. 在仓库的 `.obsidian/plugins/` 下新建 `yoga-tray` 文件夹，放入 `main.js` 和 `manifest.json`。
+1. 在仓库的 `.obsidian/plugins/` 下新建 `tuopan` 文件夹，放入 `main.js` 和 `manifest.json`。
 2. 先关掉其他托盘插件，否则快捷键和关窗行为会冲突。
-3. 在 **设置 → 第三方插件** 里刷新列表，启用 **Yoga 托盘**。
+3. 在 **设置 → 第三方插件** 里刷新列表，启用 **托盘**。
 
 ## 让图标更清晰
 
@@ -35,10 +35,10 @@ Obsidian 的图标不随本仓库分发。没有 `tray.ico` 时，插件使用 E
 从你自己安装的 Obsidian 本地生成：
 
 ```powershell
-pwsh -NoProfile -File scripts/build-tray-ico.ps1 -Out "<你的仓库>/.obsidian/plugins/yoga-tray/tray.ico"
+pwsh -NoProfile -File scripts/build-tray-ico.ps1 -Out "<你的仓库>/.obsidian/plugins/tuopan/tray.ico"
 ```
 
-Obsidian 默认装在当前用户目录，其他位置用 `-Exe` 指定 `Obsidian.exe`。生成后在第三方插件里关闭再启用 Yoga 托盘。也可以在设置里填自己的 `.ico` 路径。
+Obsidian 默认装在当前用户目录，其他位置用 `-Exe` 指定 `Obsidian.exe`。生成后在第三方插件里关闭再启用 托盘。也可以在设置里填自己的 `.ico` 路径。
 
 ## 致谢
 
