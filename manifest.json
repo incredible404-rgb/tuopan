@@ -1,7 +1,7 @@
 {
   "id": "tuopan",
   "name": "Tuopan",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "minAppVersion": "1.14.5",
   "description": "Keep the app in the system tray (系统托盘): start hidden at login, stay running when closed, and skip the vault picker on relaunch. Verified on Windows only.",
   "author": "zym",
