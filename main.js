@@ -4,12 +4,12 @@ const { Plugin, PluginSettingTab, Setting, Notice, Platform, moment, normalizePa
 
 const STARTUP_NAME = "Obsidian 托盘";
 const STARTUP_FLAG = "--tuopan-startup";
-// Plugins this one replaces leave Run values behind; each would launch Obsidian a second time.
-const LEGACY_STARTUP_NAMES = ["electron.app.Obsidian", "Obsidian Windows Startup", "Obsidian Yoga Tray", "Obsidian Traystone-Yoga"];
+// Other tray plugins leave these Run values behind; each would launch Obsidian a second time.
+const LEGACY_STARTUP_NAMES = ["electron.app.Obsidian", "Obsidian Windows Startup"];
 const PICKER_SWEEP_MS = [0, 100, 300, 1000, 3000];
 
 const DEFAULTS = {
-  launchOnStartup: true,
+  launchOnStartup: false,
   startupApplied: false,
   startHidden: true,
   closeToTray: true,
@@ -17,8 +17,8 @@ const DEFAULTS = {
   hideTaskbarIcon: false,
   trayIconPath: "",
   trayTooltip: "{{vault}} — Obsidian",
-  toggleHotkey: "CmdOrCtrl+Alt+O",
-  quickNoteHotkey: "CmdOrCtrl+Alt+N",
+  toggleHotkey: "",
+  quickNoteHotkey: "",
   quickNoteFolder: "",
   quickNoteFormat: "YYYY-MM-DD",
 };
@@ -57,7 +57,7 @@ module.exports = class TuopanPlugin extends Plugin {
     this.registerHotkeys();
     this.applyTaskbar();
     // Applied once: rewriting on every launch would undo a Task Manager disable.
-    if (!this.settings.startupApplied) {
+    if (this.settings.launchOnStartup && !this.settings.startupApplied) {
       // Not awaited: verification takes seconds and must not delay hiding at login.
       this.applyStartup().then(async (ok) => {
         if (!ok) return;
@@ -286,9 +286,42 @@ module.exports = class TuopanPlugin extends Plugin {
       if (!custom.isEmpty()) return custom;
       new Notice("托盘：自定义图标读取失败，已改用自带图标。");
     }
-    const bundled = nativeImage.createFromPath(this.app.vault.adapter.getFullPath(`${this.manifest.dir}/tray.ico`));
-    if (!bundled.isEmpty()) return bundled;
+    const { adapter } = this.app.vault;
+    const ico = `${this.manifest.dir}/tray.ico`;
+    try {
+      if (!(await adapter.exists(ico))) await this.buildIcon(ico);
+      const image = nativeImage.createFromPath(adapter.getFullPath(ico));
+      if (!image.isEmpty()) return image;
+    } catch {}
     return app.getFileIcon(mainProcess.execPath, { size: "normal" });
+  }
+
+  // Built locally from the installed app so Obsidian's icon is never redistributed.
+  async buildIcon(path) {
+    const { app, process: mainProcess } = this.remote;
+    const frames = [];
+    for (const size of ["small", "normal", "large"]) {
+      const icon = await app.getFileIcon(mainProcess.execPath, { size });
+      if (!icon.isEmpty()) frames.push({ width: icon.getSize().width, png: new Uint8Array(icon.toPNG()) });
+    }
+    const headerSize = 6 + 16 * frames.length;
+    const bytes = new Uint8Array(headerSize + frames.reduce((sum, f) => sum + f.png.length, 0));
+    const view = new DataView(bytes.buffer);
+    view.setUint16(2, 1, true);
+    view.setUint16(4, frames.length, true);
+    let offset = headerSize;
+    frames.forEach((frame, i) => {
+      const entry = 6 + 16 * i;
+      view.setUint8(entry, frame.width);
+      view.setUint8(entry + 1, frame.width);
+      view.setUint16(entry + 4, 1, true);
+      view.setUint16(entry + 6, 32, true);
+      view.setUint32(entry + 8, frame.png.length, true);
+      view.setUint32(entry + 12, offset, true);
+      bytes.set(frame.png, offset);
+      offset += frame.png.length;
+    });
+    await this.app.vault.adapter.writeBinary(path, bytes.buffer);
   }
 
   destroyTray() {
@@ -409,11 +442,8 @@ class TuopanSettings extends PluginSettingTab {
       plugin.registerHotkeys();
     };
 
-    heading("启动");
-    toggle("launchOnStartup", "开机自启", "登录 Windows 时启动，同时清除旧插件留下的自启项。之后也可以在任务管理器里单独关闭。", () => plugin.applyStartup());
+    toggle("launchOnStartup", "开机自启", "登录 Windows 时启动，同时清除其他托盘插件留下的自启项。之后也可以在任务管理器里单独关闭。", () => plugin.applyStartup());
     toggle("startHidden", "开机时隐藏到托盘", "只对开机自启生效，手动打开时正常显示。");
-
-    heading("窗口");
     toggle("closeToTray", "关闭窗口时留在托盘", "点 X 时隐藏到托盘，不退出。托盘图标创建失败时会真正关闭，避免窗口找不回来。");
     toggle("focusOnRelaunch", "再次启动时恢复窗口", "已在运行时再点快捷方式，直接恢复窗口，不弹选库窗。");
     toggle("hideTaskbarIcon", "隐藏任务栏图标", "窗口显示时也不占任务栏。", () => plugin.applyTaskbar());
