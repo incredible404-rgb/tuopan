@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-> **When & Why to Use**: For Windows users who keep [Obsidian](https://obsidian.md) running all day as an instant-access note app—an Obsidian plugin that starts hidden in the system tray at login, hides to tray on close, skips the vault picker on relaunch, and opens today's quick note via global hotkeys.
+An [Obsidian](https://obsidian.md) plugin that keeps Obsidian in the Windows system tray: it starts hidden at login, stays running when you close the window, skips the vault picker on relaunch, and opens today's quick note with one hotkey.
 
 **Verified on Windows only.** The plugin stays inactive on other systems. Its interface is in Chinese.
 
