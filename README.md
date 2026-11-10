@@ -1,63 +1,63 @@
-# Tuopan
+# 托盘（Tuopan）
 
-[中文说明](README.zh-CN.md)
+中文 | [English](README.en.md)
 
-Tuopan keeps [Obsidian](https://obsidian.md) quietly in the system tray: start hidden at login, stay running when the window is closed, and skip the vault picker on relaunch.
+> **使用情景与用途**：在 Windows 上把 [Obsidian](https://obsidian.md) 当作随时呼出的常驻笔记软件时使用——提供开机静默隐藏到系统托盘、关窗常驻后台、再次启动直接恢复窗口而不弹选库窗，以及全局快捷键打开今日快速笔记。
 
-**Verified on Windows only.** The plugin stays inactive on other systems. Its interface is in Chinese.
+**目前只在 Windows 上验证过**，在其他系统上插件不会启用。
 
-## Features
+## 功能
 
-- **Start hidden at login**: only the login launch hides the window. Opening Obsidian by hand shows it as usual.
-- **Close to tray**: the close button hides the window, along with any pop-out windows.
-- **No vault picker on relaunch**: opening Obsidian while it is already running restores the existing window.
-- **Sharp tray icon**: a multi-size icon is built on first run, so Windows picks the right size for your display scale.
-- **Global hotkeys**: optional hotkeys to show or hide the window and to open today's quick note. None are set by default.
-- **Quick note**: opens today's note in a new tab without replacing the one you are reading.
-- **Tray menu**: show or hide, quick note, relaunch, and quit.
+- **开机自启并隐藏到托盘**：只有开机自启时才隐藏，手动打开时正常显示。
+- **关窗留在托盘**：点 X 只隐藏窗口，弹出的副窗口一起隐藏和恢复。
+- **不弹选库窗**：Obsidian 已在运行时再点快捷方式，直接恢复窗口。
+- **清晰的托盘图标**：首次运行时生成多尺寸图标，Windows 按屏幕缩放选对应尺寸。
+- **全局快捷键**：可设置显示或隐藏窗口、打开今天的快速笔记，默认不占用任何按键。
+- **快速笔记**：同名笔记直接打开，在新标签页打开，不替换正在看的内容。
+- **托盘菜单**：显示或隐藏、快速笔记、重启 Obsidian、彻底退出。
 
-## Installation
+## 安装
 
-Turn off other tray plugins first, because their hotkeys and close behavior conflict with this one.
+先关掉其他托盘插件，否则快捷键和关窗行为会冲突。
 
-### With BRAT
+### 用 BRAT 安装
 
-1. Install BRAT from the community plugins.
-2. Run the command `BRAT: Add a beta plugin for testing` and enter `incredible404-rgb/tuopan`.
-3. Enable **Tuopan** under community plugins.
+1. 在第三方插件里安装 BRAT。
+2. 运行命令 `BRAT: Add a beta plugin for testing`，填入 `incredible404-rgb/tuopan`。
+3. 在第三方插件里启用 **Tuopan**。
 
-### Manually
+### 手动安装
 
-1. Download `main.js` and `manifest.json` from the [latest release](https://github.com/incredible404-rgb/tuopan/releases/latest).
-2. Create the folder `.obsidian/plugins/tuopan/` in your vault and put both files in it.
-3. Reload the list under **Settings → Community plugins** and enable **Tuopan**.
+1. 从 [最新发布](https://github.com/incredible404-rgb/tuopan/releases/latest) 下载 `main.js` 和 `manifest.json`。
+2. 在仓库里新建 `.obsidian/plugins/tuopan/` 文件夹，把两个文件放进去。
+3. 在 **设置 → 第三方插件** 里刷新列表，启用 **Tuopan**。
 
-## Usage
+## 使用
 
-1. Open **Settings → Tuopan** and turn on the login option (开机自启) if you want Obsidian to start with Windows.
-2. Keep start hidden (开机时隐藏到托盘) on to start in the tray. Click the tray icon to show or hide the window.
-3. Right-click the tray icon for the quick note, relaunch, and quit actions. Use quit (彻底退出) to really close Obsidian.
-4. To add hotkeys, enter a value such as `CmdOrCtrl+Alt+O` in the hotkey fields. They apply system-wide once you leave the field.
-5. Set the quick note folder and file name format under the quick note section (快速笔记).
+1. 打开 **设置 → Tuopan**，需要开机启动就打开“开机自启”。
+2. “开机时隐藏到托盘”保持开启，开机后就在托盘里。点托盘图标显示或隐藏窗口。
+3. 右键托盘图标可以打开快速笔记、重启 Obsidian 或彻底退出。真正关闭 Obsidian 要用“彻底退出”。
+4. 需要快捷键时，在快捷键栏填 `CmdOrCtrl+Alt+O` 这样的值，离开输入框后全局生效。
+5. 在“快速笔记”里设置存放文件夹和文件名格式。
 
-## How it behaves
+## 运行细节
 
-- If the tray icon cannot be created, the window is never hidden and the close button really closes it.
-- Autostart is off by default and is only written when you first enable it or change the setting. Turning it off in Task Manager is respected.
-- Shutdown and sign-out are not blocked, and reloading the app still works.
+- 托盘图标创建失败时不隐藏窗口，点 X 会真正关闭，窗口不会找不回来。
+- 开机自启默认关闭。自启项只在首次启用和切换开关时写入，你在任务管理器里关掉后不会被改回来。
+- 关机和注销时不拦截退出，“重新加载应用”也能正常使用。
 
-## Access outside the vault
+## 仓库以外的访问
 
-Tuopan uses no network connections and has no telemetry. This is everything it touches outside the vault:
+本插件不联网，也没有遥测。下面是它访问仓库以外内容的全部情况：
 
-- **Reads the icon from `Obsidian.exe`** to build `tray.ico` in the plugin folder. Obsidian's icon is not distributed with this project.
-- **Writes a Windows login item**, only when autostart is on. It adds the current user's Run value `Obsidian 托盘` and removes `electron.app.Obsidian` and `Obsidian Windows Startup`, which other tray plugins leave behind and which would start the app twice.
-- **Registers system-wide hotkeys**, only those you set.
+- **读取 `Obsidian.exe` 的图标**：用来生成插件文件夹里的 `tray.ico`。Obsidian 的图标不随本项目分发。
+- **写入 Windows 登录启动项**：只在打开“开机自启”时，写入当前用户的 Run 项 `Obsidian 托盘`，并删除 `electron.app.Obsidian` 和 `Obsidian Windows Startup` 两个其他托盘插件留下的项，避免开机启动两次。
+- **注册系统全局快捷键**：只注册你设置的快捷键。
 
-## Credits
+## 致谢
 
-The feature set was inspired by Background Tray, Traystone, and Windows Startup and Tray. The code was written independently and this project is not affiliated with them or with Obsidian.
+设计时参考了 Background Tray、Traystone 和 Windows Startup and Tray 三个插件的功能。代码为独立编写，与这些项目以及 Obsidian 官方都没有隶属关系。
 
-## License
+## 许可证
 
 [MIT](LICENSE)
